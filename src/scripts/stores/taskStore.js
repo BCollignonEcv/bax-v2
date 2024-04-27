@@ -54,9 +54,9 @@ export const useTaskStore = defineStore({
         async initialize() {
             const userStore = useUserStore();
             if (userStore.isAuthenticated && !this._isInitialize) {
-                logHelpers.writeLog('PINIA TaskStore - Initialisation', 'INFO')
+                logHelpers.writeLog('PINIA TaskStore - Initialisation', '', 'INFO')
                 await this.request_getTaskList();
-                logHelpers.writeLog('PINIA TaskStore - Initialisation success', 'SUCCESS')
+                logHelpers.writeLog('PINIA TaskStore - Initialisation success', '', 'SUCCESS')
                 this._isInitialize = true;
             }
         },
@@ -67,22 +67,21 @@ export const useTaskStore = defineStore({
         async request_validateTask(taskID) {
             const userStore = useUserStore();
             let task = this.getTask(taskID);
-            console.log('request_validateTask :', task)
 
             // Add new history
-            let result = await taskFirebaseService.postTaskHistory(this.appID, task, {username: userStore._username, userID: userStore._uid})
+            task = await taskFirebaseService.postTaskHistory(this.appID, task, {username: userStore._username, userID: userStore._uid})
 
             // Update to not require
-            // if(!result.error && task.require) {
-            //     task.require = false;
-            //     await taskFirebaseService.patchTask(this.appID, task)
-            // }
+            if(task.require) {
+                task.require = false;
+                await taskFirebaseService.patchTask(this.appID, task)
+            }
 
         },
         async request_requireTask(taskID) {
             let task = this.getTask(taskID);
             task.require = true;
-            await taskFirebaseService.patchTask(this.appID, task);
+            task = await taskFirebaseService.patchTask(this.appID, task);
         },
         async request_removeTask(taskID) {
             let task = this.getTask(taskID);

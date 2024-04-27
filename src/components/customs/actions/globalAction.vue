@@ -5,20 +5,22 @@
                 <c_buttonAction icon="add" v-bind="buttonActionConfig"></c_buttonAction>
             </template>
             <template v-slot:content>
-                <div class="c_action">
-                    <c_icon :_name="'add'"></c_icon>
-                    <br>
-                    <p>Create task</p>
-                </div>
-                <div class="c_action">
-                    <c_icon :_name="'add'"></c_icon>
-                    <br>
-                    <p>Create menu</p>
-                </div>
-                <div class="c_action">
-                    <c_icon :_name="'add'"></c_icon>
-                    <br>
-                    <p>Add item</p>
+                <div class="c_actionList">
+                    <div class="c_action">
+                        <c_icon :_name="'add'"></c_icon>
+                        <br>
+                        <p>Create task</p>
+                    </div>
+                    <div class="c_action">
+                        <c_icon :_name="'add'"></c_icon>
+                        <br>
+                        <p>Create menu</p>
+                    </div>
+                    <div class="c_action">
+                        <c_icon :_name="'add'"></c_icon>
+                        <br>
+                        <p>Add item</p>
+                    </div>
                 </div>
             </template>
         </c_modal>
@@ -51,19 +53,30 @@ export default {
     right: var(--m-5);
     bottom: var(--m-5);
 
-    .c_action {
+    .c_actionList {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
 
-        background-color: var(--c-0-100);
-        padding: var(--m-5);
-        border-radius: var(--m-5);
 
-        &+.c_action{
-            margin-top: var(--m-3);
+        .c_action {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 200px;
+            height: 150px;
+
+            background-color: var(--c-0-100);
+            padding: var(--m-5);
+            border-radius: var(--m-5);
+
+            &+.c_action {
+                margin-top: var(--m-3);
+            }
         }
     }
+
 }
 </style>

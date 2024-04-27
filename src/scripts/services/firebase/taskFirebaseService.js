@@ -41,31 +41,29 @@ const taskFirebaseService = {
                 tasks[task.id] = task;
             }));
 
-            logHelpers.writeLog('GET /tasks', 'SUCCESS')
+            logHelpers.writeLog('GET /tasks', '', 'SUCCESS')
             return tasks
         } catch (error) {
-            logHelpers.writeLog('GET /tasks', 'ERROR')
+            logHelpers.writeLog('GET /tasks', '','ERROR')
             console.error(error)
             return { error: true}
         }
     },
     postTask: async (_appID, task) => {
         try {
-            logHelpers.writeLog('POST /task', 'SUCCESS')
+            logHelpers.writeLog('POST /task', '','SUCCESS')
         } catch (error) {
-            logHelpers.writeLog('POST /task', 'ERROR')
+            logHelpers.writeLog('POST /task', '','ERROR')
             return { error: true}
         }
     },
     patchTask: async (_appID, task) => {
         try {
-            // Format task before update
-            task = taskConverter.toFirestore(task)
-
-            await updateDoc(doc(db, "baxApp", _appID, 'tasks', task.id), task);
-            logHelpers.writeLog('PATCH /task', 'SUCCESS')
+            let response = await updateDoc(doc(db, "baxApp", _appID, 'tasks', task.id), taskConverter.toFirestore(task));
+            logHelpers.writeLog('PATCH /task', '', 'SUCCESS')
+            return response;
         } catch (error) {
-            logHelpers.writeLog('PATCH /task', 'ERROR')
+            logHelpers.writeLog('PATCH /task', '', 'ERROR')
             console.log(error)
             return { error: true}
         }
@@ -73,9 +71,9 @@ const taskFirebaseService = {
 
     deleteTask: async (_appID, task) => {
         try {
-            logHelpers.writeLog('DELETE /task', 'SUCCESS')
+            logHelpers.writeLog('DELETE /task', '', 'SUCCESS')
         } catch (error) {
-            logHelpers.writeLog('DELETE /task', 'ERROR')
+            logHelpers.writeLog('DELETE /task', '', 'ERROR')
             return { error: true}
         }
     },
@@ -85,17 +83,25 @@ const taskFirebaseService = {
             // Création de la référence vers la collection history (baxApp/*/tasks/*/history)
             const historyCollectionRef = collection(db, "baxApp", _appID, 'tasks', task.id, 'history').withConverter(historyConverter)
             
-            // console.log(taskConverter.toFirestore(history))
             // Ajout du document dans la collection history
-            await addDoc(historyCollectionRef, history);
+            let docRef = await addDoc(historyCollectionRef, history);
 
-            // task.history.push(history)
+            // Récupération du document ajouté
+            let docSnapshot = await getDoc(docRef);
 
-            logHelpers.writeLog('POST /task/*/history', 'SUCCESS')
+            if(docSnapshot.exists()) {
+                logHelpers.writeLog('POST /task/*/history', '','SUCCESS')
 
-            // return task;
+                // Ajout de l'incrément sur la task 
+                task.history.push(docSnapshot.data())
+    
+                // Envoie de la task mise à jours
+                return task;
+            } else {
+                logHelpers.writeLog('POST /task/*/history', 'WARNING : Desynchronisation', 'INFO')
+            }
         } catch (error) {
-            logHelpers.writeLog('POST /task/*/history', 'ERROR')
+            logHelpers.writeLog('POST /task/*/history', '', 'ERROR')
             console.log(error)
             return { error: true}
         }
@@ -136,7 +142,7 @@ const historyConverter = {
                 userID: occurence.userID,
                 username: occurence.username,
             },
-            date: occurence.date ? occurence.date : serverTimestamp()
+            date: serverTimestamp()
         };
     },
     fromFirestore: function (snapshot, options) {
