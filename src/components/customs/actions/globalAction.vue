@@ -1,30 +1,28 @@
 <template>
-    <div class="c_global">
-        <c_modal v-bind="modalConfig">
-            <template v-slot:trigger>
+    <c_modal v-bind="modalConfig">
+        <template v-slot:trigger>
+            <div class="c_global">
                 <c_buttonAction icon="add" v-bind="buttonActionConfig"></c_buttonAction>
-            </template>
-            <template v-slot:content>
-                <div class="c_actionList">
-                    <div class="c_action">
-                        <c_icon :_name="'add'"></c_icon>
-                        <br>
-                        <p>Create task</p>
-                    </div>
-                    <div class="c_action">
-                        <c_icon :_name="'add'"></c_icon>
-                        <br>
-                        <p>Create menu</p>
-                    </div>
-                    <div class="c_action">
-                        <c_icon :_name="'add'"></c_icon>
-                        <br>
-                        <p>Add item</p>
-                    </div>
-                </div>
-            </template>
-        </c_modal>
-    </div>
+            </div>
+        </template>
+        <template v-slot:content>
+            <div class="c_action">
+                <c_icon :_name="'add'"></c_icon>
+                <br>
+                <p>Create task</p>
+            </div>
+            <div class="c_action">
+                <c_icon :_name="'add'"></c_icon>
+                <br>
+                <p>Create menu</p>
+            </div>
+            <div class="c_action">
+                <c_icon :_name="'add'"></c_icon>
+                <br>
+                <p>Add item</p>
+            </div>
+        </template>
+    </c_modal>
 </template>
 
 <script>
@@ -38,7 +36,8 @@ export default {
             },
             modalConfig: {
                 background: false,
-                outsideBackground: true
+                outsideBackground: 'dark',
+                centered: true
             }
         }
     },
@@ -52,31 +51,22 @@ export default {
     position: fixed;
     right: var(--m-5);
     bottom: var(--m-5);
+}
 
-    .c_actionList {
+.c_action {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        width: 200px;
+        height: 150px;
 
+        background-color: var(--c-0-100);
+        padding: var(--m-5);
+        border-radius: var(--m-5);
 
-        .c_action {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 200px;
-            height: 150px;
-
-            background-color: var(--c-0-100);
-            padding: var(--m-5);
-            border-radius: var(--m-5);
-
-            &+.c_action {
-                margin-top: var(--m-3);
-            }
+        &+.c_action {
+            margin-top: var(--m-3);
         }
     }
-
-}
 </style>

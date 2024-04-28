@@ -8,12 +8,13 @@ export const sortTasks = (tasks) => {
 
 export const enhancedDBTask = (task) => {
     let lastDate = getLastDate(task);
-    let dueDate = getDueDate(lastDate, task.periodicity);
+    let dueDate = lastDate ? getDueDate(lastDate, task.periodicity) : getDueDate(new Date(), task.periodicity);
     let remainingDays = getRemainingDays(dueDate)
     let remainingTime = getRemainingPercentage(remainingDays, task.periodicity)
     let status = getTastStatus(remainingTime, task.require)
 
     return {
+        ...task,
         lastDate: lastDate,
         dueDate: dueDate,
         remainingDays: remainingDays,
@@ -43,7 +44,7 @@ export const getLastDate = (db_task) => {
     if (db_task.history && db_task.history.length > 0) {
         return db_task.history[0].date
     } else {
-        return new Date()
+        return null;
     }
 }
 

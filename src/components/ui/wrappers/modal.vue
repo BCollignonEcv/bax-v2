@@ -8,7 +8,7 @@
             </div>
         </template>
         <template v-if="open">
-            <div class="c_modal-popin" :class="{ 'fullHeight': fullHeight, 'unify': background }">
+            <div class="c_modal-popin" :class="{ 'fullHeight': fullHeight, 'unify': background, 'centered': centered }">
                 <template v-if="background">
                     <div class="c_modal-header" :class="{ 'header-higthlight': headerBackground }">
                         <h4>{{ name }}</h4>
@@ -20,7 +20,7 @@
                 </div>
             </div>
         </template>
-        <div v-if="open && outsideBackground" class="c_modal-background" @click="closeModal()"></div>
+        <div v-if="open" class="c_modal-background" :class="outsideBackground" @click="closeModal()"></div>
     </div>
 </template>
 
@@ -29,13 +29,14 @@
 export default {
     components: {},
     props: {
-        outsideBackground: Boolean,
+        outsideBackground: String,
         headerBackground: Boolean,
         background: {
             type: Boolean,
             default: true
         },
         fullHeight: Boolean,
+        centered: Boolean,
         name: String
     },
     data() {
@@ -84,6 +85,10 @@ export default {
             transform: unset;
         }
 
+        &.centered{
+            align-items: center;
+        }
+
         .c_modal-header {
             display: flex;
             justify-content: flex-end;
@@ -126,6 +131,14 @@ export default {
         height: calc(100vh - var(--header-size));
         width: 100vw;
         background-color: var(--c-1-50);
+
+        &.dark {
+            background-color: var(--c-1-75);
+        }
+
+        &.light {
+            background-color: var(--c-1-25);
+        }
     }
 }
 </style>

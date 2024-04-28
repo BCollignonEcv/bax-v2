@@ -1,4 +1,4 @@
-const enableLogs = import.meta.env.VITE_APP_ENABLE_LOGS === 'true';
+const enableLogs = import.meta.env.VITE_APP_ENABLE_LOGS || false;
 
 export const writeLog = (title, info, level = 'LOG') => {
 

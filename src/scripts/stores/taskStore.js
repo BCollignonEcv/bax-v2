@@ -66,26 +66,25 @@ export const useTaskStore = defineStore({
         },
         async request_validateTask(taskID) {
             const userStore = useUserStore();
-            let task = this.getTask(taskID);
-
-            // Add new history
-            task = await taskFirebaseService.postTaskHistory(this.appID, task, {username: userStore._username, userID: userStore._uid})
-
-            // Update to not require
-            if(task.require) {
-                task.require = false;
-                await taskFirebaseService.patchTask(this.appID, task)
+            let response = await taskFirebaseService.postTaskHistory(this.appID, taskID, {username: userStore._username, userID: userStore._uid})
+            if(!response.error) {
+                this._tasks[taskID] = response;
             }
-
         },
         async request_requireTask(taskID) {
             let task = this.getTask(taskID);
             task.require = true;
-            task = await taskFirebaseService.patchTask(this.appID, task);
+            let response = await taskFirebaseService.patchTask(this.appID, task);
+            if(!response.error) {
+                this._tasks[taskID] = response;
+            }
         },
         async request_removeTask(taskID) {
             let task = this.getTask(taskID);
-            await taskFirebaseService.deleteTask(this.appID, task);
+            let response = await taskFirebaseService.deleteTask(this.appID, task);
+            if(!response.error) {
+                delete this._tasks[taskID];
+            }
         },
     }
 })

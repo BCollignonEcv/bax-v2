@@ -1,4 +1,4 @@
-import { doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, collection, query, orderBy, limit, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, collection, query, orderBy, limit, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "./firebaseService.js";
 
 import * as taskHelpers from '@/scripts/helpers/taskHelpers'
@@ -16,96 +16,125 @@ const taskFirebaseService = {
             // Recupération du snapshot avec les documents de la collection tasks
             const querySnapshot = await getDocs(taskCollectionRef);
 
+            // Itération sur chaque document tasks récupérées
             let tasks = {}
-
-            // Itération sur chaque document task récupéré
             await Promise.all(querySnapshot.docs.map(async (taskDoc) => {
-
                 // Récupération des données du document task
-                let task = taskDoc.data();
-
-                // Création de la référence vers la collection history (baxApp/*/tasks/*/history)
-                const historyCollectionRef = collection(doc(db, "baxApp", _appID), "tasks", taskDoc.id, "history").withConverter(historyConverter);
-                // Recupération du snapshot avec les documents de la collection history presente dans le document task
-                const historyQuerySnapshot = await getDocs(query(historyCollectionRef, orderBy('date', 'desc'), limit(5)));
-
-                // Recupération du snapshot avec les documents de la collection history presente dans le document task puis des données
-                task.history = historyQuerySnapshot.docs.map(historyDoc => historyDoc.data())
-
-                // Ajout de champs
-                task = {
-                    ...task,
-                    ...taskHelpers.enhancedDBTask(task)
-                };
-
+                let task = await taskDoc.data();
                 tasks[task.id] = task;
             }));
 
             logHelpers.writeLog('GET /tasks', '', 'SUCCESS')
             return tasks
         } catch (error) {
-            logHelpers.writeLog('GET /tasks', '','ERROR')
+            logHelpers.writeLog('GET /tasks', '', 'ERROR')
             console.error(error)
-            return { error: true}
+            return { error: true }
+        }
+    },
+    getTask: async (_appID, taskID) => {
+        try {
+            // Création de la référence vers le document task (baxApp/*/tasks/*)
+            const taskRef = doc(db, "baxApp", _appID, "tasks", taskID).withConverter(taskConverter)
+            // Recupération du snapshot avec le document task
+            const snapshot = await getDoc(taskRef);
+
+            logHelpers.writeLog('GET /task', '', 'SUCCESS')
+            return await snapshot.data();
+        } catch (error) {
+            logHelpers.writeLog('GET /task', '', 'ERROR')
+            console.error(error)
+            return { error: true }
         }
     },
     postTask: async (_appID, task) => {
         try {
-            logHelpers.writeLog('POST /task', '','SUCCESS')
-        } catch (error) {
-            logHelpers.writeLog('POST /task', '','ERROR')
-            return { error: true}
-        }
-    },
-    patchTask: async (_appID, task) => {
-        try {
-            let response = await updateDoc(doc(db, "baxApp", _appID, 'tasks', task.id), taskConverter.toFirestore(task));
-            logHelpers.writeLog('PATCH /task', '', 'SUCCESS')
-            return response;
-        } catch (error) {
-            logHelpers.writeLog('PATCH /task', '', 'ERROR')
-            console.log(error)
-            return { error: true}
-        }
-    },
-
-    deleteTask: async (_appID, task) => {
-        try {
-            logHelpers.writeLog('DELETE /task', '', 'SUCCESS')
-        } catch (error) {
-            logHelpers.writeLog('DELETE /task', '', 'ERROR')
-            return { error: true}
-        }
-    },
-
-    postTaskHistory: async (_appID, task, history) => {
-        try {
-            // Création de la référence vers la collection history (baxApp/*/tasks/*/history)
-            const historyCollectionRef = collection(db, "baxApp", _appID, 'tasks', task.id, 'history').withConverter(historyConverter)
-            
-            // Ajout du document dans la collection history
-            let docRef = await addDoc(historyCollectionRef, history);
+            // Création de la référence vers la collection history (baxApp/*/tasks)
+            const taskCollectionRef = collection(db, "baxApp", _appID, 'tasks').withConverter(historyConverter)
+            // Ajout du document dans la collection tasks
+            let docRef = await addDoc(taskCollectionRef, task);
 
             // Récupération du document ajouté
             let docSnapshot = await getDoc(docRef);
 
-            if(docSnapshot.exists()) {
-                logHelpers.writeLog('POST /task/*/history', '','SUCCESS')
+            if (docSnapshot.exists()) {
+                logHelpers.writeLog('POST /task', '', 'SUCCESS')
 
-                // Ajout de l'incrément sur la task 
-                task.history.push(docSnapshot.data())
-    
-                // Envoie de la task mise à jours
-                return task;
+                return await taskFirebaseService.getTask(_appID, docSnapshot.id)
             } else {
-                logHelpers.writeLog('POST /task/*/history', 'WARNING : Desynchronisation', 'INFO')
+                logHelpers.writeLog('POST /task', 'WARNING : Desynchronisation', 'INFO')
             }
+
+            throw new Error();
         } catch (error) {
-            logHelpers.writeLog('POST /task/*/history', '', 'ERROR')
+            logHelpers.writeLog('POST /task', '', 'ERROR')
             console.log(error)
-            return { error: true}
+            return { error: true }
         }
     },
+    patchTask: async (_appID, task) => {
+        try {
+            await updateDoc(doc(db, "baxApp", _appID, 'tasks', task.id), taskConverter.toFirestore(task));
+            logHelpers.writeLog('PATCH /task', '', 'SUCCESS');
+            return await taskFirebaseService.getTask(_appID, task.id);
+        } catch (error) {
+            logHelpers.writeLog('PATCH /task', '', 'ERROR')
+            console.log(error)
+            return { error: true }
+        }
+    },
+
+    deleteTask: async (_appID, taskID) => {
+        try {
+            // Création de la référence vers le document task (baxApp/*/tasks/*)
+            const taskDocRef = doc(db, "baxApp", _appID, "tasks", taskID);
+            // Suppression du document task (baxApp/*/tasks/*)
+            await deleteDoc(taskDocRef);
+            logHelpers.writeLog('DELETE /task', '', 'SUCCESS')
+        } catch (error) {
+            logHelpers.writeLog('DELETE /task', '', 'ERROR')
+            return { error: true }
+        }
+    },
+
+    postTaskHistory: async (_appID, taskID, history) => {
+        try {
+            await runTransaction(db, async (transaction) => {
+                // Mettre à jour la tâche (task)
+                transaction.update(doc(db, "baxApp", _appID, 'tasks', taskID), { require: false });
+
+                // Création d'un nouveau document dans la collection history
+                const newHistoryDocRef = doc(collection(db, "baxApp", _appID, "tasks", taskID, "history")).withConverter(historyConverter);
+                transaction.set(newHistoryDocRef, history);
+            });
+
+            logHelpers.writeLog('POST /task/*/history', '', 'SUCCESS')
+            return await taskFirebaseService.getTask(_appID, taskID);
+        } catch (error) {
+            logHelpers.writeLog('POST /task/*/history', error, 'ERROR')
+            return { error: true }
+        }
+    },
+    getTaskHistoryByTaskRef: async (taskRef) => {
+        try {
+            // Création de la référence vers la task récupéré (baxApp/*/tasks/*)
+            taskRef = doc(db, taskRef)
+
+            // Création de la référence vers la collection history (baxApp/*/tasks/*/history)
+            const historyCollectionRef = collection(taskRef, "history").withConverter(historyConverter);
+
+            // Recupération du snapshot avec les documents de la collection history presente dans le document task
+            const historyQuerySnapshot = await getDocs(query(historyCollectionRef, orderBy('date', 'desc'), limit(5)));
+
+            logHelpers.writeLog('GET /task/*/history', '', 'SUCCESS')
+
+            // Recupération du snapshot avec les documents de la collection history presente dans le document task puis des données
+            return historyQuerySnapshot.docs.map(historyDoc => historyDoc.data())
+        } catch (error) {
+            logHelpers.writeLog('GET /task/*/history', error, 'ERROR')
+            return { error: true }
+        }
+    }
 }
 
 /**************************************
@@ -121,17 +150,16 @@ const taskConverter = {
             require: task.require,
         };
     },
-    fromFirestore: function (snapshot, options) {
-        const data = snapshot.data(options);
+    fromFirestore: async function (snapshot, options) {
+        let data = snapshot.data(options);
 
-        return {
-            id: snapshot.id,
-            label: data.label,
-            periodicity: data.periodicity,
-            require: data.require,
-            subtasks: data.subtasks,
-            // history: [],
-        };
+        // Recupération de l'history de la task
+        data.history = await taskFirebaseService.getTaskHistoryByTaskRef(snapshot.ref.path);
+
+        // Calcule de la task
+        data = taskHelpers.enhancedDBTask({ ...data, id: snapshot.id });
+
+        return data;
     }
 };
 

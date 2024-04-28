@@ -24,7 +24,6 @@ export default {
     data() {
         return {
             modalConfig: {
-                outsideBackground: true,
                 headerBackground: true
             }
         }
