@@ -1,0 +1,25 @@
+{
+  "name": "bax_app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vueform/vueform": "^1.9.1",
+    "@vueuse/core": "^10.9.0",
+    "firebase": "^10.9.0",
+    "path": "^0.12.7",
+    "pinia": "^2.1.7",
+    "vite-plugin-pwa": "^0.19.3",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.1.6"
+  }
+}
