@@ -1,28 +1,22 @@
 <template>
-    <c_modal v-bind="modalConfig">
-        <template v-slot:trigger>
-            <div class="c_global">
-                <c_buttonAction icon="add" v-bind="buttonActionConfig"></c_buttonAction>
-            </div>
-        </template>
-        <template v-slot:content>
-            <div class="c_action">
-                <c_icon :_name="'add'"></c_icon>
-                <br>
-                <p>Create task</p>
-            </div>
-            <div class="c_action">
-                <c_icon :_name="'add'"></c_icon>
-                <br>
-                <p>Create menu</p>
-            </div>
-            <div class="c_action">
-                <c_icon :_name="'add'"></c_icon>
-                <br>
-                <p>Add item</p>
-            </div>
-        </template>
-    </c_modal>
+    <div class="c_globalAction">
+        <transition-group name="open-top-fade">
+            <template v-if="!open">
+                <div class="c_globalAction-trigger" @click="openActions()">
+                    <c_buttonAction icon="add"></c_buttonAction>
+                </div>
+            </template>
+            <template v-if="open">
+                <div class="c_globalAction-overlay">
+                    <router-link to="tasks/create-task">
+                        <c_buttonAction icon="checklist"></c_buttonAction>
+                    </router-link>
+                    <c_buttonAction icon="close" @click="closeActions()"></c_buttonAction>
+                </div>
+            </template>
+        </transition-group>
+        <div v-if="open" class="c_globalAction-background" @click="closeActions()"></div>
+    </div>
 </template>
 
 <script>
@@ -31,42 +25,81 @@ export default {
     props: {},
     data() {
         return {
-            buttonActionConfig: {
-                _color: 'secondary'
-            },
-            modalConfig: {
-                background: false,
-                outsideBackground: 'dark',
-                centered: true
-            }
+            open: false,
+        }
+    },
+    methods: {
+        openActions() {
+            this.open = true;
+        },
+        closeActions() {
+            this.open = false;
         }
     },
     computed: {},
-    methods: {}
 }
 </script>
 
 <style lang="scss">
-.c_global {
-    position: fixed;
-    right: var(--m-5);
-    bottom: var(--m-5);
-}
+.c_globalAction {
+    &-trigger {
+        z-index: 150;
+        position: fixed;
+        right: var(--m-5);
+        bottom: var(--m-5);
+    }
 
-.c_action {
+    &-overlay {
+        z-index: 150;
+        position: fixed;
+        right: var(--m-5);
+        bottom: var(--m-5);
+
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: 200px;
-        height: 150px;
-
-        background-color: var(--c-0-100);
-        padding: var(--m-5);
-        border-radius: var(--m-5);
-
-        &+.c_action {
-            margin-top: var(--m-3);
-        }
+        gap: var(--m-7);
     }
+
+    &-background{
+        z-index: 149;
+        position: fixed;
+        top: var(--header-size);
+        left: 0;
+        height: calc(100vh - var(--header-size));
+        width: 100vw;
+    }
+}
+
+.open-top-fade-enter-active,
+.open-top-fade-leave-active {
+    transition: all .5s ease;
+
+    * {
+        transition: all .5s ease;
+    }
+}
+
+.open-top-fade-enter-from {
+    opacity: .5;
+
+    .c_buttonRound{
+        margin-bottom: -100%;
+    }
+
+    .c_buttonRound:last-of-type{
+        margin-bottom: 0;
+    }
+}
+
+.open-top-fade-leave-to {
+    opacity: 0;
+
+    .c_buttonRound{
+        margin-bottom: -100%;
+    }
+
+    .c_buttonRound:last-of-type{
+        margin-bottom: 0;
+    }
+}
 </style>

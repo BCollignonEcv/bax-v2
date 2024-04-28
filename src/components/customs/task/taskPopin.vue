@@ -1,4 +1,4 @@
-<template>
+<template v-if="_task">
     <div class="c_taskPopin">
         <div class="c_taskPopin-informations">
             <div class="information-hightlight">
@@ -35,7 +35,7 @@
             <c_button v-bind="buttonConfig" @click="taskStore.request_validateTask(_task.id)">Valider</c_button>
             <c_buttonAction icon='speed' @click="taskStore.request_requireTask(_task.id)"></c_buttonAction>
             <c_buttonAction icon='edit' @click="taskStore.request_validateTask(_task.id)"></c_buttonAction>
-            <c_buttonAction icon='delete' @click="taskStore.request_removeTask(_task.id)"></c_buttonAction>
+            <c_buttonAction icon='delete' @click="deleteTask(_task.id)"></c_buttonAction>
         </div>
     </div>
 </template>
@@ -73,6 +73,9 @@ export default {
             return date.toLocaleDateString('fr-FR', { weekday: 'long' }) +
                 ' ' + date.getDate() +
                 ' ' + date.toLocaleDateString('fr-FR', { month: 'long' });
+        },
+        deleteTask(taskID) {
+            this.taskStore.request_removeTask(taskID)
         }
     }
 }

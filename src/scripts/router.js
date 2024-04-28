@@ -25,6 +25,18 @@ const router = createRouter({
                 import ('../pages/p_tasks.vue'),
         },
         {
+            path: '/tasks/:id',
+            name: 'Task',
+            component: () =>
+                import ('../pages/p_task.vue'),
+        },
+        {
+            path: '/tasks/create-task',
+            name: 'Task',
+            component: () =>
+                import ('../pages/p_task.vue'),
+        },
+        {
             path: '/account',
             name: 'Account',
             component: () =>

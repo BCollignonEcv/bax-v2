@@ -1,8 +1,9 @@
 import { doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, collection, query, orderBy, limit, serverTimestamp, updateDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "./firebaseService.js";
 
-import * as taskHelpers from '@/scripts/helpers/taskHelpers'
 import * as logHelpers from '@/scripts/helpers/logHelpers'
+
+import { Task } from '@/scripts/class/Task.js';
 
 /*************************************
 **************** CRUD ****************
@@ -50,25 +51,15 @@ const taskFirebaseService = {
     postTask: async (_appID, task) => {
         try {
             // Création de la référence vers la collection history (baxApp/*/tasks)
-            const taskCollectionRef = collection(db, "baxApp", _appID, 'tasks').withConverter(historyConverter)
+            const taskCollectionRef = collection(db, "baxApp", _appID, 'tasks').withConverter(taskConverter)
+
             // Ajout du document dans la collection tasks
             let docRef = await addDoc(taskCollectionRef, task);
 
-            // Récupération du document ajouté
-            let docSnapshot = await getDoc(docRef);
-
-            if (docSnapshot.exists()) {
-                logHelpers.writeLog('POST /task', '', 'SUCCESS')
-
-                return await taskFirebaseService.getTask(_appID, docSnapshot.id)
-            } else {
-                logHelpers.writeLog('POST /task', 'WARNING : Desynchronisation', 'INFO')
-            }
-
-            throw new Error();
+            logHelpers.writeLog('POST /task', '', 'SUCCESS')
+            return await taskFirebaseService.getTask(_appID, docRef.id)
         } catch (error) {
-            logHelpers.writeLog('POST /task', '', 'ERROR')
-            console.log(error)
+            logHelpers.writeLog('POST /task', error, 'ERROR')
             return { error: true }
         }
     },
@@ -78,12 +69,10 @@ const taskFirebaseService = {
             logHelpers.writeLog('PATCH /task', '', 'SUCCESS');
             return await taskFirebaseService.getTask(_appID, task.id);
         } catch (error) {
-            logHelpers.writeLog('PATCH /task', '', 'ERROR')
-            console.log(error)
+            logHelpers.writeLog('PATCH /task', error, 'ERROR')
             return { error: true }
         }
     },
-
     deleteTask: async (_appID, taskID) => {
         try {
             // Création de la référence vers le document task (baxApp/*/tasks/*)
@@ -91,17 +80,17 @@ const taskFirebaseService = {
             // Suppression du document task (baxApp/*/tasks/*)
             await deleteDoc(taskDocRef);
             logHelpers.writeLog('DELETE /task', '', 'SUCCESS')
+            return { success: true }
         } catch (error) {
-            logHelpers.writeLog('DELETE /task', '', 'ERROR')
+            logHelpers.writeLog('DELETE /task', error, 'ERROR')
             return { error: true }
         }
     },
-
     postTaskHistory: async (_appID, taskID, history) => {
         try {
             await runTransaction(db, async (transaction) => {
                 // Mettre à jour la tâche (task)
-                transaction.update(doc(db, "baxApp", _appID, 'tasks', taskID), { require: false });
+                transaction.update(doc(db, "baxApp", _appID, 'tasks', taskID), { required: false });
 
                 // Création d'un nouveau document dans la collection history
                 const newHistoryDocRef = doc(collection(db, "baxApp", _appID, "tasks", taskID, "history")).withConverter(historyConverter);
@@ -147,7 +136,7 @@ const taskConverter = {
             label: task.label,
             periodicity: task.periodicity,
             subtasks: task.subtasks,
-            require: task.require,
+            required: task.required,
         };
     },
     fromFirestore: async function (snapshot, options) {
@@ -157,7 +146,7 @@ const taskConverter = {
         data.history = await taskFirebaseService.getTaskHistoryByTaskRef(snapshot.ref.path);
 
         // Calcule de la task
-        data = taskHelpers.enhancedDBTask({ ...data, id: snapshot.id });
+        data = new Task({ ...data, id: snapshot.id })
 
         return data;
     }

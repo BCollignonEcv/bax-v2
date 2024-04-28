@@ -31,7 +31,7 @@
     --c-0-50: rgba(256, 256, 256, 0.5);
     --c-0-25: rgba(256, 256, 256, 0.25);
     --c-1-100: #1c2027;
-    --c-1-90: rgba(28, 32, 39, 0.90);
+    --c-1-90: rgba(28, 32, 39, 0.9);
     --c-1-75: rgba(28, 32, 39, 0.75);
     --c-1-50: rgba(28, 32, 39, 0.5);
     --c-1-25: rgba(28, 32, 39, 0.25);
@@ -56,18 +56,18 @@
     --fs-4: 1.4rem;
     --fs-5: 1.2rem;
     --fs-6: 1rem;
-    --fs-7: .8rem;
-    --fs-8: .7rem;
+    --fs-7: 0.8rem;
+    --fs-8: 0.7rem;
     --m-1: 3rem;
     --m-2: 2.4rem;
     --m-3: 2rem;
     --m-4: 1.6rem;
     --m-5: 1rem;
-    --m-6: .8rem;
-    --m-7: .5rem;
+    --m-6: 0.8rem;
+    --m-7: 0.5rem;
 }
 
-*{
+* {
     box-sizing: border-box;
     font-family: "CustomFont";
 }
@@ -92,11 +92,21 @@ main {
     padding-bottom: var(--footer-size);
 }
 
-p, h1, h2, h3, h4, h5, label {
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+label {
     color: white;
 }
 
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
     font-weight: bold;
 }
 
@@ -132,11 +142,11 @@ h5 {
     margin-bottom: var(--m-7);
 }
 
-input[type=hidden]{
+input[type="hidden"] {
     height: 0 !important;
 }
 
-.bg-white{  
+.bg-white {
     * {
         color: var(--c-1-100);
     }

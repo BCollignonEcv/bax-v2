@@ -1,13 +1,16 @@
 <template>
     <Vueform ref="form$" v-model="formData" :endpoint="false" @submit="taskFormSubmit()">
-        <GroupElement name="task_informations" label="Nouvelle tâche">
-            <TextElement name="label" :rules="['required', 'max:255']" :columns="{ container: 8 }" placeholder="Nom" />
-            <TextElement name="periodicity" input-type="number" :rules="['nullable', 'min:0', 'integer']"
-                autocomplete="off" :columns="{ container: 4 }" placeholder="Périodicité" />
+        <StaticElement name="task_title" content="Tâche" tag="h2" />
+        <StaticElement name="divider" tag="hr" />
+        <TextElement name="label" :rules="['required', 'max:255']" placeholder="Nom" />
+        <GroupElement name="task_informations">
+            <TextElement name="periodicity" input-type="number" :rules="['min:0', 'integer']" autocomplete="off"
+                :columns="{ container: 4 }" placeholder="Périodicité" />
+            <CheckboxElement name="required" text="Required" :columns="{ container: 8 }"/>
         </GroupElement>
         <GroupElement name="subtasks_list">
             <GroupElement name="container" :conditions="[['subtasks_list.subtasks', 'not_empty']]">
-                <StaticElement name="first_name" content="Tâches secondaires" />
+                <StaticElement name="subtask_label" content="Tâches secondaires" />
             </GroupElement>
             <ListElement name="subtasks" add-text="+ Ajouter une tâche secondaire" :initial="0">
                 <template #default="{ index }">
@@ -25,6 +28,8 @@
 
 
 <script>
+import * as taskHelpers from '@/scripts/helpers/taskHelpers'
+
 import { useTaskStore } from '@/scripts/stores/taskStore'
 import { ref, onMounted } from 'vue'
 
@@ -36,12 +41,12 @@ export default {
         const form$ = ref(null)
         const taskStore = useTaskStore()
 
-        onMounted(async () => {
-            let data = {
-                label: 'test'
-            }
-            form$.value.load(data)
-        })
+        // onMounted(async () => {
+        //     let data = {
+        //         label: 'test'
+        //     }
+        //     form$.value.load(data)
+        // })
 
         return { form$, taskStore }
     },
@@ -52,10 +57,18 @@ export default {
     },
     methods: {
         taskFormSubmit() {
-            // this.taskStore.postTask(this.formData)
+            let newTask = taskHelpers.formatData(this.formData);
+            this.taskStore.request_postTask(newTask)
         }
     }
 }
 </script>
 
-<style scoped></style>
+<style lang="scss">
+:root,
+:before,
+:after,
+* {
+    --vf-primary: #0065ff;
+}
+</style>

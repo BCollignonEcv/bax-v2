@@ -3,7 +3,6 @@ import { useLocalStorage } from '@vueuse/core'
 
 import { taskFirebaseService } from '@/scripts/services/firebase/taskFirebaseService'
 
-import * as taskHelpers from '@/scripts/helpers/taskHelpers'
 import * as logHelpers from '@/scripts/helpers/logHelpers'
 
 import { useUserStore } from '@/scripts/stores/userStore'
@@ -61,8 +60,16 @@ export const useTaskStore = defineStore({
             }
         },
         async request_getTaskList(){
-            this._tasks = await taskFirebaseService.getTasks(this.appID);
-            return this._tasks;
+            let response = await taskFirebaseService.getTasks(this.appID);
+            if(!response.error) {
+                this._tasks = response;
+            }
+        },
+        async request_postTask(task){
+            let response = await taskFirebaseService.postTask(this.appID, task);
+            if(!response.error) {
+                this._tasks[response.id] = response;
+            }
         },
         async request_validateTask(taskID) {
             const userStore = useUserStore();
@@ -73,15 +80,14 @@ export const useTaskStore = defineStore({
         },
         async request_requireTask(taskID) {
             let task = this.getTask(taskID);
-            task.require = true;
+            task.required = true;
             let response = await taskFirebaseService.patchTask(this.appID, task);
             if(!response.error) {
                 this._tasks[taskID] = response;
             }
         },
         async request_removeTask(taskID) {
-            let task = this.getTask(taskID);
-            let response = await taskFirebaseService.deleteTask(this.appID, task);
+            let response = await taskFirebaseService.deleteTask(this.appID, taskID);
             if(!response.error) {
                 delete this._tasks[taskID];
             }
